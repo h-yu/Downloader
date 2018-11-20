@@ -49,6 +49,4 @@ class TestDownloader:
         http_protocol = protocols.grab('http')
         d.run_one_download(http_protocol, 'http://FAIL', self.target_dir + "/test", 1)
         captured = capsys.readouterr()
-        with open('./loool', 'wb') as myfile:
-            myfile.write(str(captured).encode())
         assert captured.out == "setup\nDownloading from http://FAIL failed because of error: \nDownloading from http://FAIL failed because of error: \nDownloading from http://FAIL failed because of error: \n"
