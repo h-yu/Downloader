@@ -1,6 +1,4 @@
 
-
-
 class MockConnection:
     def __init__(self, response_data, fail_on=-1):
         self.response_data = response_data
@@ -8,7 +6,7 @@ class MockConnection:
         self.readcount = 0
         self.fail_on = fail_on
 
-    # For HTTP
+    # For iterables
     def iter_content(self, chunk_size):
         iterable_response = [self.response_data[i:i+chunk_size] for i in range(0, len(self.response_data), chunk_size)]
         for i in iterable_response:
@@ -17,7 +15,7 @@ class MockConnection:
             self.readcount += 1
             yield i.encode()
 
-    # For FTP
+    # For successive calls
     def read(self, chunk_size):
         if self.fail_on == self.readcount:
             raise Exception
