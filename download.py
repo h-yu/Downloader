@@ -83,6 +83,8 @@ def main():
                         help="input url list")
     parser.add_argument("-c", "--chunk-size", type=int, default=1024,
                         help="chunk size for streaming downloads")
+    parser.add_argument("-r", "--max-retries", type=int, default=3,
+                        help="number of times to retry when a download fails")
     args = parser.parse_args()
 
 

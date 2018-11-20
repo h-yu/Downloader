@@ -1,6 +1,6 @@
 # Downloader
 
-Downloader accepts a list of URLs and a target path. It downloads from those URLs to the target path in parallel. Downloader supports the http and ftp protocols and is extensible to support additional ones if needed.
+Downloader accepts a list of URLs and a target path. It downloads from those URLs to the target path in parallel. Downloader supports the http, ftp, and sftp protocols and is extensible to support additional ones if needed.
 
 ### Prerequisites
 
@@ -26,7 +26,7 @@ You must run this before running the program or it may not work properly.
 ### Running the program
 ```
 $ python download.py -h
-usage: download.py [-h] [-t TARGET] [-i INPUT] [-c CHUNK_SIZE]
+usage: download.py [-h] -t TARGET -i INPUT [-c CHUNK_SIZE] [-r MAX_RETRIES]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -36,6 +36,8 @@ optional arguments:
                         input url list
   -c CHUNK_SIZE, --chunk-size CHUNK_SIZE
                         chunk size for streaming downloads
+  -r MAX_RETRIES, --max-retries MAX_RETRIES
+                        number of times to retry when a download fails
 ```
 Downloader requires as input a line-separated list of URLs to download, and a path to save the files.
 If the target directory does not exist, one will be created.
@@ -60,5 +62,6 @@ Currently it tests the input validation methods as well as protocol extraction f
 ## Built With
 
 * [Requests](http://docs.python-requests.org/en/master/) - Library for http requests
+* [Paramiko](http://www.paramiko.org/) - Library for SSH and SFTP
 * [pytest](https://docs.pytest.org/en/latest/contents.html) - Test framework
 * [python 3](https://www.python.org/downloads/)
