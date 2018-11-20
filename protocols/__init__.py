@@ -9,6 +9,8 @@ def grab(protocol_name, *args, **kwargs):
 
     try:
         module_name = protocol_name
+        if not module_name.endswith("_protocol"):
+            module_name = module_name + "_protocol"
 
         module = import_module('.' + module_name, package='protocols')
         classes = []

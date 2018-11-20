@@ -1,12 +1,12 @@
 from . import BaseProtocol
-from urllib.request import urlopen
+import urllib
 
 class FTPProtocol(BaseProtocol):
     def __init__(self):
         pass
 
     def download(self, url, target, chunk_size):
-        response = urlopen(url)
+        response = urllib.request.urlopen(url)
         with open(target, 'wb') as f:
             while True:
                 chunk = response.read(chunk_size)

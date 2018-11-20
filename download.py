@@ -1,16 +1,17 @@
-import json
 import argparse
+import utils
 import protocols
-import uuid,base64
-import re
 import os
 import multiprocessing
+import time
 
 class Downloader:
-    def __init__(self, target, input_list, chunk_size):
+    def __init__(self, target, input_list, chunk_size, max_retries=3, retry_sleep=1):
         self.target = self.process_target(target)
         self.input_list = input_list
         self.chunk_size = chunk_size
+        self.max_retries = max(max_retries, 1)
+        self.retry_sleep= max(retry_sleep, 0)
         with open(input_list) as f:
             lines = f.read().splitlines()
             self.lineset = self.process_input_list(lines)
@@ -22,47 +23,33 @@ class Downloader:
             os.makedirs(target_str)
         return target_str
 
-    def protocol_from_url(self, url):
-        """
-        Given a url, extracts the protocol acronym
-        """
-        #pattern = re.compile("^[^:]+(?=:\/\/)")
-        pattern = re.compile("^[^:]+(?=://)")
-        match = pattern.search(url)
-        if match:
-            return match.group(0)
-
     def process_input_list(self, input_list):
         lineset = set()
         for item in input_list:
             item = item.strip()
-            if self.protocol_from_url(item):
+            if utils.protocol_from_url(item):
                 lineset.add(item)
         return lineset
 
-    def filename_from_url(self, url):
-        """
-        Creates a unique filename based on the URL. There is a vanishingly small
-        chance of filename collision, but I've left the function this way because
-        I feel it's worth it to have shorter filenames. Collisions could be
-        completely avoided by something like just base64 encoding the url
-        """
-        name = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
-        short = base64.encodebytes(uuid.UUID(name).bytes).decode("ascii").rstrip('=\n').replace('/', '_')
-        return short
-
     def run_one_download(self, protocol, url, target_file, chunk_size):
-        try:
-            protocol.download(url, target_file, chunk_size)
-        except Exception as e:
-            print("Skipped downloading from {} because of error: {}".format(url, e))
-            if os.path.exists(target_file):
-                os.remove(target_file)
+        for i in range(self.max_retries):
+            try:
+                protocol.download(url, target_file, chunk_size)
+            except Exception as e:
+                print("Downloading from {} failed because of error: {}".format(url, e))
+                # If an exception was raised (e.g. connection was lost),
+                # remove any partial data that was downloaded.
+                if os.path.exists(target_file):
+                    os.remove(target_file)
+                time.sleep(self.retry_sleep)
+            else:
+                break
+
 
     def get_protocol(self, url):
         try:
-            protocol_id = self.protocol_from_url(url)
-            protocol = protocols.grab(protocol_id + "_protocol")
+            protocol_id = utils.protocol_from_url(url)
+            protocol = protocols.grab(protocol_id)
             return protocol
         except ImportError as e:
             print("Could not get protocol for {} because {}".format(url, e))
@@ -74,10 +61,10 @@ class Downloader:
             protocol = self.get_protocol(url)
             if not protocol:
                 continue
-            download_path = self.target + self.filename_from_url(url)
+            download_path = self.target + utils.filename_from_url(url)
             if not os.path.exists(download_path):
-                print("Downloading to {} from {}".format(self.target + self.filename_from_url(url), url))
-                proc = multiprocessing.Process(target=self.run_one_download, args=(protocol, url, self.target + self.filename_from_url(url), self.chunk_size,))
+                print("Downloading with filename {} from {}".format(utils.filename_from_url(url), url))
+                proc = multiprocessing.Process(target=self.run_one_download, args=(protocol, url, self.target + utils.filename_from_url(url), self.chunk_size,))
                 procs.append(proc)
                 proc.start()
             else:
