@@ -1,5 +1,5 @@
 from . import BaseProtocol
-import urllib
+import urllib.request
 
 class FTPProtocol(BaseProtocol):
     def __init__(self):
